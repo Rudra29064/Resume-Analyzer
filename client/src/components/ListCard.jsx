@@ -2,22 +2,26 @@ import React from 'react';
 
 function ListCard({ title, items, color }) {
   const colors = {
-    green: 'bg-green-100 text-green-700',
-    red: 'bg-red-100 text-red-700',
-    orange: 'bg-orange-100 text-orange-700',
-    blue: 'bg-blue-100 text-blue-700',
-    indigo: 'bg-indigo-100 text-indigo-700',
+    green: { dot: 'bg-pass', text: 'text-pass' },
+    red: { dot: 'bg-alert', text: 'text-alert' },
+    orange: { dot: 'bg-warn', text: 'text-warn' },
+    blue: { dot: 'bg-signal', text: 'text-signal' },
+    indigo: { dot: 'bg-signal', text: 'text-signal' },
   };
+  const c = colors[color];
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6">
-      <h2 className="text-lg font-bold text-gray-700 mb-3">{title}</h2>
-      <ul className="space-y-2">
-        {items?.map((item, i) => (
-          <li key={i} className={`text-sm px-3 py-2 rounded-lg ${colors[color]}`}>
+    <div className="border border-white/10 bg-panel/60 p-6">
+      <p className="font-mono text-[10px] text-steel tracking-widest mb-4">{title.toUpperCase()}</p>
+      <ul className="space-y-2.5">
+        {items?.length ? items.map((item, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300 leading-relaxed">
+            <span className={`w-1.5 h-1.5 ${c.dot} mt-1.5 flex-shrink-0`} />
             {item}
           </li>
-        ))}
+        )) : (
+          <li className="text-steeldim text-sm font-mono">— none detected —</li>
+        )}
       </ul>
     </div>
   );

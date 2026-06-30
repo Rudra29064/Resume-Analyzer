@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { rewriteResumePDF } from '../services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ScoreCard from '../components/ScoreCard';
 import ListCard from '../components/ListCard';
+import { rewriteResumePDF } from '../services/api';
 
 function ResultsPage() {
-
   const [rewriting, setRewriting] = useState(false);
   const [rewriteError, setRewriteError] = useState('');
 
@@ -14,15 +13,14 @@ function ResultsPage() {
   const analysis = state?.analysis;
   const file = state?.file;
 
-
   const handleRewrite = async () => {
-    if (!file) return setRewriteError('Original file not found. Please re-upload.');
+    if (!file) return setRewriteError('Original file lost. Re-upload to rewrite.');
     setRewriting(true);
     setRewriteError('');
     try {
       await rewriteResumePDF(file);
     } catch (err) {
-      setRewriteError('Something went wrong. Please try again.');
+      setRewriteError('Rewrite failed. Try again.');
     } finally {
       setRewriting(false);
     }
@@ -30,11 +28,11 @@ function ResultsPage() {
 
   if (!analysis) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-void flex items-center justify-center font-body">
         <div className="text-center">
-          <p className="text-gray-500 text-lg">No analysis found.</p>
-          <button onClick={() => navigate('/')} className="mt-4 text-indigo-600 underline">
-            Go back
+          <p className="text-steel font-mono text-sm">NO_DATA_FOUND</p>
+          <button onClick={() => navigate('/')} className="mt-4 text-signal text-sm hover:underline font-mono">
+            ← RETURN TO UPLOAD
           </button>
         </div>
       </div>
@@ -42,62 +40,71 @@ function ResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-void font-body">
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-700">Your Resume Analysis</h1>
-          <p className="text-gray-500 mt-1">Here's what our AI found</p>
+      {/* Top bar */}
+      <div className="px-8 py-6 flex items-center justify-between border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-signal rounded-full pulse-soft" />
+          <span className="font-mono text-xs text-steel tracking-widest">SCAN_RESULT</span>
+        </div>
+        <button onClick={() => navigate('/')} className="font-mono text-xs text-steeldim hover:text-signal transition">
+          NEW SCAN +
+        </button>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 py-10">
+
+        {/* Scores */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <ScoreCard title="ATS Compatibility" score={analysis.atsScore} />
+          <ScoreCard title="Internship Readiness" score={analysis.internshipReadiness} />
         </div>
 
-        {/* Score Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <ScoreCard title="ATS Score" score={analysis.atsScore} color="indigo" />
-          <ScoreCard title="Internship Readiness" score={analysis.internshipReadiness} color="green" />
+        {/* Feedback */}
+        <div className="border border-white/10 bg-panel/60 p-6 mb-4">
+          <p className="font-mono text-[10px] text-steel tracking-widest mb-3">OVERALL ASSESSMENT</p>
+          <p className="text-gray-300 text-sm leading-relaxed">{analysis.overallFeedback}</p>
         </div>
 
-        {/* Overall Feedback */}
-        <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-700 mb-2">📝 Overall Feedback</h2>
-          <p className="text-gray-600">{analysis.overallFeedback}</p>
+        {/* Lists grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <ListCard title="Strengths" items={analysis.strengths} color="green" />
+          <ListCard title="Weaknesses" items={analysis.weaknesses} color="red" />
+          <ListCard title="Missing Skills" items={analysis.missingSkills} color="orange" />
+          <ListCard title="Keyword Suggestions" items={analysis.keywords} color="blue" />
         </div>
 
-        {/* Lists */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <ListCard title="✅ Strengths" items={analysis.strengths} color="green" />
-          <ListCard title="⚠️ Weaknesses" items={analysis.weaknesses} color="red" />
-          <ListCard title="🎯 Missing Skills" items={analysis.missingSkills} color="orange" />
-          <ListCard title="🔑 Suggested Keywords" items={analysis.keywords} color="blue" />
+        <div className="mb-6">
+          <ListCard title="Improvement Suggestions" items={analysis.suggestions} color="indigo" />
         </div>
 
-        {/* Suggestions */}
-        <ListCard title="💡 Improvement Suggestions" items={analysis.suggestions} color="indigo" />
+        {/* Rewrite panel */}
+        <div className="border border-signal/20 bg-gradient-to-br from-signal/[0.04] to-transparent p-7 relative">
+          <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-signal/50" />
+          <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-signal/50" />
+          <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-signal/50" />
+          <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-signal/50" />
 
-        {/* Rewrite Button */}
-        <div className="mt-6 bg-white rounded-2xl shadow p-6 text-center">
-          <h2 className="text-lg font-bold text-gray-700 mb-2">✍️ Want a Better Resume?</h2>
-          <p className="text-gray-500 text-sm mb-4">
-            AI will rewrite your resume with stronger language and download it as a PDF
+          <p className="font-mono text-[10px] text-signal tracking-widest mb-2">NEXT STEP</p>
+          <h2 className="font-display text-xl font-semibold text-white mb-2">Generate a rewritten resume</h2>
+          <p className="text-steel text-sm mb-5 max-w-lg">
+            AI restructures your content into a clean, professional layout with stronger language — exported as a ready-to-send PDF.
           </p>
-          {rewriteError && <p className="text-red-500 text-sm mb-3">{rewriteError}</p>}
+
+          {rewriteError && <p className="text-alert text-xs font-mono mb-3">ERROR: {rewriteError}</p>}
+
           <button
             onClick={handleRewrite}
             disabled={rewriting}
-            className={`w-full py-3 rounded-xl font-semibold text-white transition-all
-              ${rewriting ? 'bg-purple-300 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'}`}
+            className={`px-6 py-3 font-display font-semibold text-sm transition-all
+              ${rewriting
+                ? 'bg-white/5 text-steeldim cursor-not-allowed'
+                : 'bg-signal text-void hover:bg-white'}`}
           >
-            {rewriting ? 'Rewriting & Generating PDF... ⏳' : 'Rewrite & Download PDF ✍️'}
+            {rewriting ? 'GENERATING···' : 'REWRITE & DOWNLOAD PDF →'}
           </button>
         </div>
-
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/')}
-          className="mt-6 w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-        >
-          Analyze Another Resume
-        </button>
 
       </div>
     </div>

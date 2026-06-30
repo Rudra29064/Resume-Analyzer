@@ -58,3 +58,38 @@ export const rewriteResumePDF = async (file) => {
   a.click();
   window.URL.revokeObjectURL(url);
 };
+
+export const matchResumeWithJD = async (file, jobDescription) => {
+  const formData = new FormData();
+  formData.append('resume', file);
+  formData.append('jobDescription', jobDescription);
+
+  const response = await fetch(`${API_URL}/match`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || 'Match failed');
+  }
+
+  return await response.json();
+};
+
+export const generateInterviewQuestions = async (file) => {
+  const formData = new FormData();
+  formData.append('resume', file);
+
+  const response = await fetch(`${API_URL}/interview-questions`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || 'Generation failed');
+  }
+
+  return await response.json();
+};
