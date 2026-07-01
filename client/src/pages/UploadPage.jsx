@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useNavigate } from 'react-router-dom';
-import { uploadResume } from '../services/api';
+import { runFullScan } from '../services/api';
 
 function UploadPage() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const steps = ['Extracting text', 'Scoring ATS compatibility', 'Rewriting resume', 'Generating interview prep'];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -15,19 +18,26 @@ function UploadPage() {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
     },
     maxFiles: 1,
-    onDrop: (accepted) => {
-      setFile(accepted[0]);
-      setError('');
-    }
+    onDrop: (accepted) => { setFile(accepted[0]); setError(''); }
   });
 
-  const handleAnalyze = async () => {
+  const handleScan = async () => {
     if (!file) return setError('No file selected. Upload a resume to continue.');
     setLoading(true);
+    setError('');
+
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % steps.length;
+      setStep(i);
+    }, 1100);
+
     try {
-      const data = await uploadResume(file);
-      navigate('/results', { state: { analysis: data.analysis, file } });
+      const data = await runFullScan(file);
+      clearInterval(interval);
+      navigate('/dashboard', { state: { ...data, file } });
     } catch (err) {
+      clearInterval(interval);
       setError('Connection failed. Confirm the backend server is running.');
     } finally {
       setLoading(false);
@@ -37,7 +47,6 @@ function UploadPage() {
   return (
     <div className="min-h-screen bg-void font-body relative overflow-hidden flex flex-col">
 
-      {/* Grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -53,31 +62,28 @@ function UploadPage() {
       <div className="relative z-10 px-8 py-6 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-signal rounded-full pulse-soft" />
-          <span className="font-mono text-xs text-steel tracking-widest">RESUME_SCAN.SYS</span>
+          <span className="font-display text-sm text-white font-semibold tracking-wide">RESUMIX</span>
         </div>
         <span className="font-mono text-xs text-steeldim">v1.0</span>
       </div>
 
-      {/* Main */}
       <div className="flex-1 flex items-center justify-center p-6 relative z-10">
         <div className="w-full max-w-xl">
 
-          {/* Heading */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
-              <span className="font-mono text-xs text-signal border border-signal/30 px-2 py-1 tracking-wider">AI ANALYSIS</span>
+              <span className="font-mono text-xs text-signal border border-signal/30 px-2 py-1 tracking-wider">AI RESUME SYSTEM</span>
               <div className="h-px flex-1 bg-white/10" />
             </div>
             <h1 className="font-display text-4xl md:text-5xl font-semibold text-white leading-tight">
-              Run a diagnostic<br />on your resume.
+              One scan.<br />Every answer.
             </h1>
             <p className="text-steel mt-4 text-sm leading-relaxed max-w-md">
-              Upload a PDF or DOCX. The system extracts, scores, and reports —
-              ATS compatibility, skill gaps, and what to fix first.
+              Upload once. Get your ATS score, a rewritten resume, job-match analysis,
+              and likely interview questions — all in one report.
             </p>
           </div>
 
-          {/* Dropzone */}
           <div
             {...getRootProps()}
             className={`relative border transition-all duration-200 cursor-pointer p-10
@@ -86,8 +92,6 @@ function UploadPage() {
                 : 'border-white/10 hover:border-signal/40 bg-panel/40'}`}
           >
             <input {...getInputProps()} />
-
-            {/* corner brackets */}
             <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-signal/50" />
             <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-signal/50" />
             <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-signal/50" />
@@ -111,44 +115,37 @@ function UploadPage() {
             </div>
           </div>
 
-          {error && (
-            <p className="text-alert text-xs font-mono mt-3">ERROR: {error}</p>
-          )}
+          {error && <p className="text-alert text-xs font-mono mt-3">ERROR: {error}</p>}
 
-          {/* Button */}
           <button
-            onClick={handleAnalyze}
+            onClick={handleScan}
             disabled={loading || !file}
-            className={`w-full mt-6 py-4 font-display font-semibold text-sm tracking-wide transition-all relative overflow-hidden group
+            className={`w-full mt-6 py-4 font-display font-semibold text-sm tracking-wide transition-all
               ${loading || !file
                 ? 'bg-white/5 text-steeldim cursor-not-allowed'
                 : 'bg-signal text-void hover:bg-white'}`}
           >
             {loading ? (
-              <span className="font-mono">ANALYZING···</span>
+              <span className="font-mono">{steps[step].toUpperCase()}···</span>
             ) : (
-              'RUN ANALYSIS →'
+              'RUN FULL SCAN →'
             )}
           </button>
 
-          <button
-            onClick={() => navigate('/match')}
-            className="w-full mt-3 py-3 border border-white/10 text-steel font-mono text-xs tracking-wide hover:border-signal/40 hover:text-signal transition"
-          >
-            OR MATCH AGAINST A JOB DESCRIPTION →
-          </button>
-
-          <button
-            onClick={() => navigate('/interview')}
-            className="w-full mt-3 py-3 border border-white/10 text-steel font-mono text-xs tracking-wide hover:border-signal/40 hover:text-signal transition"
-          >
-            OR GENERATE INTERVIEW QUESTIONS →
-          </button>
+          {loading && (
+            <div className="flex gap-1.5 mt-3 justify-center">
+              {steps.map((_, idx) => (
+                <span
+                  key={idx}
+                  className={`h-1 flex-1 transition-colors ${idx <= step ? 'bg-signal' : 'bg-white/10'}`}
+                />
+              ))}
+            </div>
+          )}
 
         </div>
       </div>
 
-      {/* Footer */}
       <div className="relative z-10 px-8 py-4 border-t border-white/5 flex justify-between font-mono text-[10px] text-steeldim">
         <span>POWERED BY LLAMA 3.3</span>
         <span>LOCAL // SECURE</span>
