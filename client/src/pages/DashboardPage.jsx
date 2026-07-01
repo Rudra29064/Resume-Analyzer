@@ -152,9 +152,6 @@ function JDMatchTab({ file }) {
 }
 
 function InterviewTab({ interview }) {
-  const [_open, setOpen] = useState({});
-  const toggle = (key, i) => setOpen((p) => ({ ...p, [`${key}-${i}`]: !p[`${key}-${i}`] }));
-
   const blocks = [
     { key: 'technical', title: 'Technical Questions', items: interview.technical, color: 'text-signal' },
     { key: 'behavioral', title: 'Behavioral Questions', items: interview.behavioral, color: 'text-pass' },
@@ -172,19 +169,20 @@ function InterviewTab({ interview }) {
           <p className="font-mono text-[10px] text-steel tracking-widest mb-4">{block.title.toUpperCase()}</p>
           <div className="space-y-2">
             {block.items?.map((q, i) => (
-              <div key={i} className="border border-white/5 bg-white/[0.02]">
-                <button
-                  onClick={() => toggle(block.key, i)}
-                  className="w-full text-left px-4 py-3 flex gap-3 items-start hover:bg-white/[0.02] transition"
-                >
-                  <span className={`font-mono text-xs ${block.color} mt-0.5`}>{String(i + 1).padStart(2, '0')}</span>
-                  <span className="text-gray-200 text-sm leading-relaxed">{q.question}</span>
-                </button>
-                {q.topic && (
-                  <div className="px-4 pb-3 -mt-1">
-                    <span className={`font-mono text-[10px] ${block.color} border border-current/30 px-2 py-0.5`}>{q.topic}</span>
+              <div key={i} className="border border-white/5 bg-white/[0.02] px-4 py-3">
+                <div className="flex gap-3 items-start">
+                  <span className={`font-mono text-xs ${block.color} mt-0.5 flex-shrink-0`}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <p className="text-gray-200 text-sm leading-relaxed">{q.question}</p>
+                    {q.topic && (
+                      <span className={`font-mono text-[10px] ${block.color} border border-current/30 px-2 py-0.5 mt-2 inline-block`}>
+                        {q.topic}
+                      </span>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
