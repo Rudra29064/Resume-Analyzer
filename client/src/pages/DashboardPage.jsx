@@ -152,7 +152,7 @@ function JDMatchTab({ file }) {
 }
 
 function InterviewTab({ interview }) {
-  const [open, setOpen] = useState({});
+  const [_open, setOpen] = useState({});
   const toggle = (key, i) => setOpen((p) => ({ ...p, [`${key}-${i}`]: !p[`${key}-${i}`] }));
 
   const blocks = [
